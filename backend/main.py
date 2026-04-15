@@ -375,9 +375,11 @@ def send_email(name, email, phone, company, message, file_path):
 
     url = "https://api.brevo.com/v3/smtp/email"
 
+    api_key = os.getenv("EMAIL_PASS")  # ✅ FIXED
+
     headers = {
         "accept": "application/json",
-        "api-key": os.getenv("BREVO_API_KEY"),
+        "api-key": api_key,
         "content-type": "application/json"
     }
 
@@ -394,18 +396,6 @@ def send_email(name, email, phone, company, message, file_path):
     </html>
     """
 
-    attachments = []
-
-    # ✅ ADD FILE ATTACHMENT
-    if file_path and os.path.exists(file_path):
-        with open(file_path, "rb") as f:
-            encoded_file = base64.b64encode(f.read()).decode()
-
-        attachments.append({
-            "content": encoded_file,
-            "name": os.path.basename(file_path)
-        })
-
     data = {
         "sender": {
             "name": "Candid Resourcing Partners",
@@ -417,9 +407,18 @@ def send_email(name, email, phone, company, message, file_path):
             }
         ],
         "subject": f"New Enquiry from {name}",
-        "htmlContent": html_content,
-        "attachment": attachments  # 🔥 IMPORTANT
+        "htmlContent": html_content
     }
+
+    # ✅ ATTACHMENT ONLY IF EXISTS
+    if file_path and os.path.exists(file_path):
+        with open(file_path, "rb") as f:
+            encoded_file = base64.b64encode(f.read()).decode()
+
+        data["attachment"] = [{
+            "content": encoded_file,
+            "name": os.path.basename(file_path)
+        }]
 
     try:
         response = requests.post(url, json=data, headers=headers)
