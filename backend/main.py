@@ -40,6 +40,8 @@ load_dotenv()
 
 print("MONGO_URL:", os.getenv("MONGO_URL"))
 print("EMAIL_USER:", os.getenv("EMAIL_USER"))
+print("EMAIL_PASS:", os.getenv("EMAIL_PASS"))  # ✅ ADD HERE
+print("SENDER_EMAIL:", os.getenv("SENDER_EMAIL"))
 
 app = FastAPI()
 
@@ -327,7 +329,7 @@ def send_email(name, email, phone, company, message, file_path):
 
     headers = {
         "accept": "application/json",
-        "api-key": os.getenv("BREVO_API_KEY"),   # Brevo API Key
+        "api-key": os.getenv("EMAIL_PASS"),  # Brevo API Key
         "content-type": "application/json"
     }
 
