@@ -321,15 +321,63 @@ def format_phone(phone):
 #         os.remove(file_path)
 
 
-def send_email(name, email, phone, company, message, file_path):
+# def send_email(name, email, phone, company, message, file_path):
 
+#     import requests
+
+#     url = "https://api.brevo.com/v3/smtp/email"
+
+#     headers = {
+#         "accept": "application/json",
+#         "api-key": os.getenv("EMAIL_PASS"),  # Brevo API Key
+#         "content-type": "application/json"
+#     }
+
+#     html_content = f"""
+#     <html>
+#         <body>
+#             <h2>New Contact Form Submission</h2>
+#             <p><b>Name:</b> {name}</p>
+#             <p><b>Email:</b> {email}</p>
+#             <p><b>Phone:</b> {phone}</p>
+#             <p><b>Company:</b> {company}</p>
+#             <p><b>Message:</b><br>{message}</p>
+#         </body>
+#     </html>
+#     """
+
+#     data = {
+#         "sender": {
+#             "name": "Candid Resourcing Partners",
+#             "email": os.getenv("SENDER_EMAIL")
+#         },
+#         "to": [
+#             {
+#                 "email": os.getenv("EMAIL_RECEIVER")
+#             }
+#         ],
+#         "subject": f"New Enquiry from {name}",
+#         "htmlContent": html_content
+#     }
+
+#     try:
+#         response = requests.post(url, json=data, headers=headers)
+#         print("✅ Brevo API:", response.status_code, response.text)
+
+#     except Exception as e:
+#         print("❌ Email API error:", str(e))
+
+
+def send_email(name, email, phone, company, message, file_path):
     import requests
+    import base64
+    import os
 
     url = "https://api.brevo.com/v3/smtp/email"
 
     headers = {
         "accept": "application/json",
-        "api-key": os.getenv("EMAIL_PASS"),  # Brevo API Key
+        "api-key": os.getenv("BREVO_API_KEY"),
         "content-type": "application/json"
     }
 
@@ -346,6 +394,18 @@ def send_email(name, email, phone, company, message, file_path):
     </html>
     """
 
+    attachments = []
+
+    # ✅ ADD FILE ATTACHMENT
+    if file_path and os.path.exists(file_path):
+        with open(file_path, "rb") as f:
+            encoded_file = base64.b64encode(f.read()).decode()
+
+        attachments.append({
+            "content": encoded_file,
+            "name": os.path.basename(file_path)
+        })
+
     data = {
         "sender": {
             "name": "Candid Resourcing Partners",
@@ -357,7 +417,8 @@ def send_email(name, email, phone, company, message, file_path):
             }
         ],
         "subject": f"New Enquiry from {name}",
-        "htmlContent": html_content
+        "htmlContent": html_content,
+        "attachment": attachments  # 🔥 IMPORTANT
     }
 
     try:
@@ -366,6 +427,10 @@ def send_email(name, email, phone, company, message, file_path):
 
     except Exception as e:
         print("❌ Email API error:", str(e))
+
+    # ✅ DELETE FILE AFTER SEND
+    if file_path and os.path.exists(file_path):
+        os.remove(file_path)
 
 # -------------------------
 # ✅ DATABASE
