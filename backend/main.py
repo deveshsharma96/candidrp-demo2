@@ -327,7 +327,7 @@ def send_email(name, email, phone, company, message, file_path):
 
     headers = {
         "accept": "application/json",
-        "api-key": os.getenv("EMAIL_PASS"),  # Brevo API Key
+        "api-key": os.getenv("BREVO_API_KEY"),   # Brevo API Key
         "content-type": "application/json"
     }
 
