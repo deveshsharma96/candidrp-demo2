@@ -158,13 +158,14 @@ def send_email(name, email, phone, company, message, file_path):
     # sender_email = "deveshsharma.sap@gmail.com"
     # receiver_email = "deveshsharma9958@gmail.com"
 
-    sender_email = os.getenv("EMAIL_USER")
+    sender_email = os.getenv("SENDER_EMAIL")
     receiver_email = os.getenv("EMAIL_RECEIVER")
 
     msg = MIMEMultipart()
     # msg["From"] = "Candid Resourcing Partners <deveshsharma.sap@gmail.com>"
 
     msg["From"] = f"Candid Resourcing Partners <{sender_email}>"
+    msg["Sender"] = sender_email
     msg["Reply-To"] = email
     msg["To"] = receiver_email
     msg["Subject"] = f"New Enquiry from {name} | Candid Website"
@@ -278,15 +279,39 @@ def send_email(name, email, phone, company, message, file_path):
         msg.attach(part)
 
     # SMTP
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
+    # server = smtplib.SMTP("smtp.gmail.com", 587)
+    # server.starttls()
 
-    # app_password = "tvqh bmwp yezh djoh"
-    app_password = os.getenv("EMAIL_PASS")
+    # # app_password = "tvqh bmwp yezh djoh"
+    # app_password = os.getenv("EMAIL_PASS")
 
-    server.login(sender_email, app_password.replace(" ", ""))
-    server.send_message(msg)
-    server.quit()
+    # server.login(sender_email, app_password.replace(" ", ""))
+    
+    server = None
+
+    try:
+        server = smtplib.SMTP(
+            os.getenv("SMTP_HOST"),
+            int(os.getenv("SMTP_PORT")),
+            timeout=10
+        )
+        server.starttls()
+
+        server.login(
+            os.getenv("EMAIL_USER"),
+            os.getenv("EMAIL_PASS")
+        )
+
+        server.send_message(msg)
+
+    except Exception as e:
+        print("❌ Email error:", str(e))
+
+    finally:
+        if server:
+            server.quit()
+            
+    print("✅ Email sent successfully to", receiver_email)
 
     # 🔥 DELETE FILE AFTER EMAIL
     if file_path and os.path.exists(file_path):
