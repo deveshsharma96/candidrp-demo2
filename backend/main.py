@@ -375,24 +375,85 @@ def send_email(name, email, phone, company, message, file_path):
 
     url = "https://api.brevo.com/v3/smtp/email"
 
-    api_key = os.getenv("EMAIL_PASS")  # ✅ FIXED
-
     headers = {
         "accept": "application/json",
-        "api-key": api_key,
+        "api-key": os.getenv("EMAIL_PASS"),  # ✅ your working key
         "content-type": "application/json"
     }
 
+    formatted_message = message.replace("\n", "<br>")
+
+    # ✅ FIX (avoid crash if phone empty)
+    formatted_phone = phone if phone else "N/A"
+
+    attachment_note = (
+        """
+        <p style="margin-top: 20px; font-size: 14px; color: gray;">
+        📎 Resume/CV attached with this email
+        </p>
+        """
+        if file_path
+        else ""
+    )
+
+    # ✅ YOUR SAME DESIGN (NO CHANGE)
     html_content = f"""
     <html>
-        <body>
-            <h2>New Contact Form Submission</h2>
-            <p><b>Name:</b> {name}</p>
-            <p><b>Email:</b> {email}</p>
-            <p><b>Phone:</b> {phone}</p>
-            <p><b>Company:</b> {company}</p>
-            <p><b>Message:</b><br>{message}</p>
-        </body>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
+        
+        <div style="max-width: 600px; margin: auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(90deg, #4e0f89, #6c2bd9); color: white; padding: 20px;">
+            <h2 style="margin: 0;">New Contact Form Submission</h2>
+            <p style="margin: 5px 0 0;">Candid Resourcing Partners</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 20px;">
+            
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 10px; font-weight: bold; width: 30%;">Name:</td>
+                    <td style="padding: 10px;">{name}</td>
+                </tr>
+
+                <tr style="background: #f9f9f9;">
+                    <td style="padding: 10px; font-weight: bold;">Email:</td>
+                    <td style="padding: 10px;">{email}</td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 10px; font-weight: bold;">Phone:</td>
+                    <td style="padding: 10px;">{formatted_phone}</td>
+                </tr>
+
+                <tr style="background: #f9f9f9;">
+                    <td style="padding: 10px; font-weight: bold;">Company:</td>
+                    <td style="padding: 10px;">{company}</td>
+                </tr>
+            </table>
+
+            <!-- Message -->
+            <div style="margin-top: 20px;">
+                <h3>Message</h3>
+                <div style="background: #f4f6f8; padding: 15px; border-radius: 6px;">
+                    {formatted_message}
+                </div>
+            </div>
+
+            {attachment_note}
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f4f6f8; padding: 15px; text-align: center; font-size: 12px; color: gray;">
+            This email was sent from Candid Website Contact Form
+        </div>
+
+        </div>
+
+    </body>
     </html>
     """
 
@@ -406,11 +467,11 @@ def send_email(name, email, phone, company, message, file_path):
                 "email": os.getenv("EMAIL_RECEIVER")
             }
         ],
-        "subject": f"New Enquiry from {name}",
+        "subject": f"New Enquiry from {name} | Candid Website",
         "htmlContent": html_content
     }
 
-    # ✅ ATTACHMENT ONLY IF EXISTS
+    # ✅ ATTACHMENT SUPPORT
     if file_path and os.path.exists(file_path):
         with open(file_path, "rb") as f:
             encoded_file = base64.b64encode(f.read()).decode()
@@ -427,9 +488,11 @@ def send_email(name, email, phone, company, message, file_path):
     except Exception as e:
         print("❌ Email API error:", str(e))
 
-    # ✅ DELETE FILE AFTER SEND
+    # ✅ CLEANUP
     if file_path and os.path.exists(file_path):
         os.remove(file_path)
+
+
 
 # -------------------------
 # ✅ DATABASE
